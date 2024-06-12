@@ -1,0 +1,21 @@
+[build]
+target = "riscv32imac-esp-espidf"
+
+[target.riscv32imac-esp-espidf]
+linker = "ldproxy"
+runner = "espflash flash --bootloader bootloader.bin --monitor"
+rustflags = [ "--cfg",  "espidf_time64",
+    "--sysroot", "/home/sun/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf/riscv32-esp-elf/include/"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU = "esp32c6"
+ESP_IDF_VERSION = "v5.2.1"
+IDF_PATH = "/data/esp-idf/"
+ESP_IDF_TOOLS_INSTALL_DIR = "global"
+#ESP_IDF_COMPONENT_MANAGER = "true"
+ESP_IDF_SDKCONFIG = "sdkconfig"
+ESP_IDF_SDKCONFIG_DEFAULTS = "sdkconfig.defaults"
+CRATE_CC_NO_DEFAULTS = "1"
