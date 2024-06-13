@@ -16,12 +16,13 @@ use std::default::Default;
 use std::sync::mpsc::{Receiver};
 use std::thread::sleep;
 use std::time::{Duration};
-use chrono::{DateTime, FixedOffset, Local};
-use embedded_graphics::mono_font::ascii::FONT_8X13;
+use chrono::{FixedOffset, Local};
+use embedded_graphics::mono_font::ascii::{FONT_6X9, FONT_8X13};
 use embedded_graphics::mono_font::MonoTextStyle;
 use embedded_graphics::prelude::{Primitive, Transform};
 use embedded_graphics::primitives::PrimitiveStyle;
 use embedded_graphics::text::{Alignment, Baseline, Text, TextStyleBuilder};
+use embedded_graphics::text::renderer::TextRenderer;
 use embedded_graphics_core::Drawable;
 use embedded_text::alignment::{HorizontalAlignment, VerticalAlignment};
 use embedded_text::style::{HeightMode, TextBoxStyleBuilder};
@@ -73,7 +74,7 @@ pub fn setup_display(
 pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
     where D: DrawTarget<Color = Rgb565>, D::Error: std::fmt::Debug
 {
-    let character_style = MonoTextStyle::new(&FONT_8X13, Rgb565::BLUE);
+    let character_style = MonoTextStyle::new(&FONT_8X13, Rgb565::WHITE);
     let textbox_style = TextBoxStyleBuilder::new()
         .height_mode(HeightMode::FitToText)
         .alignment(HorizontalAlignment::Left)
@@ -83,21 +84,71 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
         .leading_spaces(true)
         .build();
 
-    let bounds = Rectangle::new(Point::zero(), Size::new(DISPLAY_WIDTH, DISPLAY_HEIGHT));
+    let text_font = MonoTextStyle::new(&FONT_6X9, Rgb565::new(0,0,255));
+
+    let bounds = Rectangle::new(
+        Point::zero() + Point::new(0, (text_font.line_height() * 2) as i32),
+        Size::new(DISPLAY_WIDTH, DISPLAY_HEIGHT));
     let mut interval = 900u16;
     let t = Tmep::new().unwrap();
+    let time_style = TextStyleBuilder::new()
+        .alignment(Alignment::Left)
+        .baseline(Baseline::Top)
+        .build();
+    let temp_style = TextStyleBuilder::new()
+        .alignment(Alignment::Right)
+        .baseline(Baseline::Top)
+        .build();
+    let mut old_msg = String::with_capacity(256);
+    let mut current_msg = String::with_capacity(256);
     loop {
         let temp = t.get().unwrap();
         match receiver.try_recv() {
             Ok(msg) => {
-                let text_box = TextBox::with_textbox_style(&msg, bounds, character_style, textbox_style);
-                display.clear(Rgb565::BLACK).unwrap();
-                text_box.draw(display).unwrap();
+                current_msg = msg
             }
-            Err(_) => {
-                let date = Local::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
-                draw_clock(display, &date, interval, temp).unwrap();
-            }
+            Err(_) => {}
+        };
+
+        if current_msg != old_msg {
+            Rectangle::new(bounds.top_left, bounds.size)
+                .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
+                .draw(display).unwrap();
+            let text_box = TextBox::with_textbox_style(&current_msg, bounds, character_style, textbox_style);
+            text_box.draw(display).unwrap();
+
+        }
+        old_msg.clear();
+        old_msg.push_str(current_msg.as_str());
+
+        if interval ==  900 {
+            let date = Local::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
+            let time_str = format!("{}", date.format("%d %b %a %H:%M:%S"));
+            let time_text = Text::with_text_style(
+                &time_str,
+                Point::zero(),
+                text_font,
+                time_style
+            );
+
+            let time_text_dimensions = time_text.bounding_box();
+            Rectangle::new(time_text_dimensions.top_left, Size::new(display.bounding_box().size.width, time_text_dimensions.size.height))
+                .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
+                .draw(display).unwrap();
+            time_text.draw(display).unwrap();
+
+            let temp_str = format!("{}C", temp);
+            let mut temp_text = Text::with_text_style(
+                &temp_str,
+                Point::zero(),
+                text_font,
+                temp_style
+            );
+            temp_text.translate_mut(Point::new(
+                DISPLAY_WIDTH  as i32,
+                0,
+            ));
+            temp_text.draw(display).unwrap();
         }
         interval += 100;
         if interval > 900{
@@ -105,58 +156,4 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
         }
         sleep(Duration::from_millis(100))
     }
-}
-
-pub fn draw_clock<D>(
-    target: &mut D,
-    date: &DateTime<FixedOffset>,
-    last: u16,
-    temp: f32
-) -> anyhow::Result<(), D::Error> where D: DrawTarget<Color = Rgb565>, D::Error: std::fmt::Debug
-{
-    let text_font = MonoTextStyle::new(&FONT_8X13, Rgb565::new(0,0,255));
-    let date = date.naive_local();
-    if last >=  900 {
-        let time_str = format!("{}", date.format("%d %b %a\n%H:%M:%S"));
-        let mut time_text = Text::with_text_style(
-            &time_str,
-            Point::zero(),
-            text_font,
-            TextStyleBuilder::new()
-                .alignment(Alignment::Center)
-                .baseline(Baseline::Alphabetic)
-                .build(),
-        );
-        time_text.translate_mut(Point::new(
-            (DISPLAY_WIDTH / 2) as i32,
-            (DISPLAY_HEIGHT / 2) as i32,
-        ));
-        let time_text_dimensions = time_text.bounding_box();
-        Rectangle::new(time_text_dimensions.top_left, time_text_dimensions.size)
-            .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
-            .draw(target)?;
-        time_text.draw(target)?;
-
-
-        let temp_str = format!("{}C", temp);
-        let mut temp_text = Text::with_text_style(
-            &temp_str,
-            Point::zero(),
-            text_font,
-            TextStyleBuilder::new()
-                .alignment(Alignment::Right)
-                .baseline(Baseline::Top)
-                .build(),
-        );
-        temp_text.translate_mut(Point::new(
-            DISPLAY_WIDTH  as i32,
-            0,
-        ));
-        let time_text_dimensions = temp_text.bounding_box();
-        Rectangle::new(time_text_dimensions.top_left, time_text_dimensions.size)
-            .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
-            .draw(target)?;
-        temp_text.draw(target)?;
-    }
-    Ok(())
 }
