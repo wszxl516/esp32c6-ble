@@ -1,4 +1,6 @@
 pub mod data;
+pub mod temp;
+
 use std::fmt::{Display, Formatter};
 
 use esp_idf_hal::sys::heap_caps_get_info;

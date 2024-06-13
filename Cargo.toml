@@ -24,7 +24,7 @@ log = { version = "0.4", default-features = false }
 esp-idf-svc = { version = "0.48", default-features = false , features = ["std", "alloc", "std", "experimental", "native"]}
 embedded-hal = "1.0.0"
 embedded-graphics-core = "0.4.0"
-embedded-graphics ="0.8.1"
+embedded-graphics = { version = "0.8.1" , features = ["fixed"]}
 esp-idf-hal = { version = "0.43.1", features = ["std"] }
 esp32-nimble = "0.6.1"
 smart-leds = "0.4.0"

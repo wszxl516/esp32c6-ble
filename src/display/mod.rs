@@ -26,6 +26,7 @@ use embedded_graphics_core::Drawable;
 use embedded_text::alignment::{HorizontalAlignment, VerticalAlignment};
 use embedded_text::style::{HeightMode, TextBoxStyleBuilder};
 use embedded_text::TextBox;
+use crate::common::temp::Tmep;
 
 const DISPLAY_WIDTH: u32 = 160;
 const DISPLAY_HEIGHT: u32 = 128;
@@ -84,8 +85,9 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
 
     let bounds = Rectangle::new(Point::zero(), Size::new(DISPLAY_WIDTH, DISPLAY_HEIGHT));
     let mut interval = 900u16;
+    let t = Tmep::new().unwrap();
     loop {
-
+        let temp = t.get().unwrap();
         match receiver.try_recv() {
             Ok(msg) => {
                 let text_box = TextBox::with_textbox_style(&msg, bounds, character_style, textbox_style);
@@ -94,7 +96,7 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
             }
             Err(_) => {
                 let date = Local::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
-                draw_clock(display, &date, interval).unwrap();
+                draw_clock(display, &date, interval, temp).unwrap();
             }
         }
         interval += 100;
@@ -108,7 +110,8 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
 pub fn draw_clock<D>(
     target: &mut D,
     date: &DateTime<FixedOffset>,
-    last: u16
+    last: u16,
+    temp: f32
 ) -> anyhow::Result<(), D::Error> where D: DrawTarget<Color = Rgb565>, D::Error: std::fmt::Debug
 {
     let text_font = MonoTextStyle::new(&FONT_8X13, Rgb565::new(0,0,255));
@@ -133,6 +136,27 @@ pub fn draw_clock<D>(
             .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
             .draw(target)?;
         time_text.draw(target)?;
+
+
+        let temp_str = format!("{}C", temp);
+        let mut temp_text = Text::with_text_style(
+            &temp_str,
+            Point::zero(),
+            text_font,
+            TextStyleBuilder::new()
+                .alignment(Alignment::Right)
+                .baseline(Baseline::Top)
+                .build(),
+        );
+        temp_text.translate_mut(Point::new(
+            DISPLAY_WIDTH  as i32,
+            0,
+        ));
+        let time_text_dimensions = temp_text.bounding_box();
+        Rectangle::new(time_text_dimensions.top_left, time_text_dimensions.size)
+            .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
+            .draw(target)?;
+        temp_text.draw(target)?;
     }
     Ok(())
 }
