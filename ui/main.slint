@@ -1,0 +1,78 @@
+import "./asset/monofonto.ttf";
+export global Theme {
+    out property <brush> background: #000000;
+    out property <brush> foreground: #ffffff;
+    out property <brush> img_colorize: #0000ff;
+    out property <length> small_spacing: 5px;
+    out property <length> big_spacing: 10px;
+}
+
+component Info {
+    in property <brush> img_colorize: Theme.img_colorize;
+    in property <image> logo;
+    in property <string> text: "";
+    in property <string> title: "";
+    in property <color> text_color: Theme.foreground;
+    in property <int> text_size: 16;
+    in property <int> title_size: 22;
+
+    VerticalLayout {
+        width: root.width;
+        height: root.height;
+        spacing: Theme.big_spacing;
+        HorizontalLayout {
+            visible: root.visible;
+            spacing: Theme.small_spacing;
+            height: title_size * 1px;
+            logo := Image {
+                height: title_size * 1px;
+                width: title_size * 1px;
+                source: root.logo;
+                image-fit: ImageFit.fill;
+                colorize: img_colorize;
+            }
+
+            title := Text {
+                visible: root.visible;
+                text: root.title;
+                color: text_color;
+                font-size: root.title_size * 1px;
+                font-weight: 12;
+                vertical-alignment: TextVerticalAlignment.top;
+                horizontal-alignment: TextHorizontalAlignment.left;
+                wrap: word-wrap;
+            }
+        }
+
+        text := Text {
+            visible: root.visible;
+            text: root.text;
+            color: text_color;
+            font-size: root.text_size * 1px;
+            vertical-alignment: TextVerticalAlignment.top;
+            horizontal-alignment: TextHorizontalAlignment.left;
+            wrap: word-wrap;
+        }
+    }
+}
+
+export component MainWindow inherits Window {
+    background: Theme.background;
+    padding: Theme.small_spacing;
+    default-font-family: "Monofonto";
+    public function set_info_text(text: string, color: color, size: int) {
+        info.text = text;
+        info.text_color = color;
+        info.text_size = size;
+    }
+    public function set_info_title(title: string, size: int) {
+        info.title = title;
+        info.title_size = size;
+    }
+    info := Info {
+        width: parent.width;
+        height: parent.height;
+        visible: true;
+        logo: @image-url("asset/info.svg");
+    }
+}

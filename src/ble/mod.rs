@@ -1,19 +1,19 @@
 #![allow(dead_code)]
 
 pub mod led;
-pub mod uart;
 pub mod time;
+pub mod uart;
 
+use crate::common::data::{State, BLACK_STATE, GREEN_STATE};
 use esp32_nimble::enums::{AuthReq, SecurityIOCap};
 use esp32_nimble::utilities::mutex::Mutex;
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::{BLEAdvertisementData, BLEDevice, BLEServer, BLEService};
+use esp_idf_hal::task::block_on;
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
-use esp_idf_hal::task::block_on;
-use crate::common::data::{BLACK_STATE, GREEN_STATE, State};
 
 pub struct BleDevice {
     device: &'static mut BLEDevice,

@@ -1,12 +1,13 @@
-use std::fmt::{Debug, Formatter};
-use smart_leds::{RGB, RGB8};
 use smart_leds::hsv::Hsv;
+use smart_leds::{RGB, RGB8};
+use std::fmt::{Debug, Formatter};
+use serde::{Deserialize, Serialize};
+
 pub const GREEN_STATE: Color = Color::Rgb(RGB8::new(0, 10, 0));
 pub const YELLOW_STATE: Color = Color::Rgb(RGB8::new(10, 10, 0));
 pub const BLUE_STATE: Color = Color::Rgb(RGB8::new(0, 0, 10));
 pub const RED_STATE: Color = Color::Rgb(RGB8::new(10, 0, 0));
 pub const BLACK_STATE: Color = Color::Rgb(RGB8::new(0, 0, 0));
-
 
 #[derive(Copy, Clone)]
 pub enum Color {
@@ -15,6 +16,7 @@ pub enum Color {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize)]
 pub enum Gradient {
     Rgb(u8, u8, u8, u8),
     Hsv(u8, u8, u8, u8, u8),
@@ -23,10 +25,10 @@ pub enum Gradient {
 pub enum State {
     Color(Color),
     Gradient(Gradient),
-    Message(&'static str)
+    Message(&'static str),
 }
 
-impl Debug for State{
+impl Debug for State {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "State(")?;
         match self {

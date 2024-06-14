@@ -3,9 +3,8 @@ target = "riscv32imac-esp-espidf"
 
 [target.riscv32imac-esp-espidf]
 linker = "ldproxy"
-runner = "espflash flash --bootloader bootloader.bin --monitor"
-rustflags = [ "--cfg",  "espidf_time64",
-    "--sysroot", "/home/sun/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf/riscv32-esp-elf/include/"]
+runner = "espflash flash -T partations.csv --bootloader bootloader.bin --monitor"
+rustflags = [ "--cfg",  "espidf_time64"]
 
 [unstable]
 build-std = ["std", "panic_abort"]

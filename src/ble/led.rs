@@ -1,9 +1,9 @@
 use super::BleDevice;
+use crate::common::data::{Gradient, State};
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::NimbleProperties;
 use log::debug;
 use std::sync::mpsc::Sender;
-use crate::common::data::{Gradient, State};
 
 pub fn init_led(device: &mut BleDevice, sender: Sender<State>) -> anyhow::Result<()> {
     debug!("init uart!");

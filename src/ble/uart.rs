@@ -1,10 +1,9 @@
-use std::sync::mpsc::Sender;
-use chrono::{FixedOffset, Local};
 use super::BleDevice;
+use crate::common::{DeviceID, get_date, MemInfo};
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::NimbleProperties;
 use log::debug;
-use crate::common::{DeviceID, MemInfo};
+use std::sync::mpsc::Sender;
 
 const UART_SERVICE_UUID: &str = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
 const UART_RX_CHAR_UUID: &str = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
@@ -32,7 +31,7 @@ pub fn init_uart(device: &mut BleDevice, sender: Sender<String>) -> anyhow::Resu
         let data = Vec::from(args.recv_data());
         let msg = match std::str::from_utf8(&data) {
             Ok(cmd) => cmd_wrapper(cmd),
-            Err(_) => "unknown".to_string()
+            Err(_) => "unknown".to_string(),
         };
         tx.lock().set_value(msg.as_bytes());
         sender.send(msg).unwrap();
@@ -42,10 +41,10 @@ pub fn init_uart(device: &mut BleDevice, sender: Sender<String>) -> anyhow::Resu
     Ok(())
 }
 
-fn cmd_wrapper(cmd :&str) -> String{
+fn cmd_wrapper(cmd: &str) -> String {
     match cmd {
         "date" => {
-            let date = Local::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
+            let date = get_date();
             format!("{}", date.format("%Y-%m-%d %H:%M:%S"))
         }
         "mem" => {
@@ -56,6 +55,6 @@ fn cmd_wrapper(cmd :&str) -> String{
         "mac" => {
             format!("{}", DeviceID::get())
         }
-        _ => "unknown".to_string()
+        _ => "unknown".to_string(),
     }
 }

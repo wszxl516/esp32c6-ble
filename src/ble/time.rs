@@ -1,9 +1,9 @@
-use std::ffi::c_long;
 use super::BleDevice;
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::NimbleProperties;
-use log::{debug, info};
 use esp_idf_hal::sys::{clock_settime, time_t, timespec};
+use log::{debug, info};
+use std::ffi::c_long;
 
 pub fn init_time(device: &mut BleDevice) -> anyhow::Result<()> {
     debug!("init time!");
@@ -18,7 +18,9 @@ pub fn init_time(device: &mut BleDevice) -> anyhow::Result<()> {
         debug!("time_service {:?}", data);
         if data.len() >= 8 {
             info!("time sync succeed!");
-            let seconds= u64::from_le_bytes([data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]]);
+            let seconds = u64::from_le_bytes([
+                data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+            ]);
             let t = timespec {
                 tv_sec: seconds as time_t,
                 tv_nsec: (seconds / 1000000000) as c_long,
