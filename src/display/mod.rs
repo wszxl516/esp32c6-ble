@@ -9,7 +9,7 @@ use embedded_hal::spi::{SpiDevice, MODE_0};
 use esp_idf_hal::delay::FreeRtos;
 use esp_idf_hal::gpio::{Gpio0, IOPin, PinDriver};
 use esp_idf_hal::prelude::FromValueType;
-use esp_idf_hal::spi::config::DriverConfig;
+use esp_idf_hal::spi::config::{DriverConfig};
 use esp_idf_hal::spi::{Dma, SpiConfig, SpiDeviceDriver, SPI2};
 use st7735s::{Orientation, ST7735};
 use std::default::Default;
@@ -48,7 +48,8 @@ pub fn setup_display(
         .baudrate(40.MHz().into())
         .write_only(true)
         .data_mode(MODE_0)
-        .queue_size(2);
+        .queue_size(2)
+        .polling(true);
     let spi =
         SpiDeviceDriver::new_single(spi2, clk, sdo, sdi, Some(cs), &driver_config, &spi_config)?;
     let mut display = ST7735::new(
@@ -123,19 +124,13 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
 
         if interval ==  900 {
             let date = Local::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
-            let time_str = format!("{}", date.format("%d %b %a %H:%M:%S"));
+            let time_str = format!("{}", date.format("%H:%M:%S"));
             let time_text = Text::with_text_style(
                 &time_str,
                 Point::zero(),
                 text_font,
                 time_style
             );
-
-            let time_text_dimensions = time_text.bounding_box();
-            Rectangle::new(time_text_dimensions.top_left, Size::new(display.bounding_box().size.width, time_text_dimensions.size.height))
-                .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
-                .draw(display).unwrap();
-            time_text.draw(display).unwrap();
 
             let temp_str = format!("{}C", temp);
             let mut temp_text = Text::with_text_style(
@@ -148,6 +143,15 @@ pub fn draw_text<D>(display: &mut D, receiver: Receiver<String>)
                 DISPLAY_WIDTH  as i32,
                 0,
             ));
+            let time_text_dimensions = time_text.bounding_box();
+            Rectangle::new(time_text_dimensions.top_left, time_text_dimensions.size)
+                .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
+                .draw(display).unwrap();
+            let temp_text_dimensions = temp_text.bounding_box();
+            Rectangle::new(temp_text_dimensions.top_left, temp_text_dimensions.size)
+                .into_styled(PrimitiveStyle::with_fill(Rgb565::new(0,0,0)))
+                .draw(display).unwrap();
+            time_text.draw(display).unwrap();
             temp_text.draw(display).unwrap();
         }
         interval += 100;

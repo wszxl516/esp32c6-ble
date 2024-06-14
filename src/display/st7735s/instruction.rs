@@ -11,6 +11,7 @@ pub enum Instruction {
     NORON = 0x13,
     INVOFF = 0x20,
     INVON = 0x21,
+    GAMSET = 0x26,
     DISPOFF = 0x28,
     DISPON = 0x29,
     CASET = 0x2A,

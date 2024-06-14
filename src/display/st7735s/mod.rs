@@ -126,6 +126,7 @@ where
         self.write_command(Instruction::PWCTR4, &[0x8A, 0x2A])?;
         self.write_command(Instruction::PWCTR5, &[0x8A, 0xEE])?;
         self.write_command(Instruction::VMCTR1, &[0x0E])?;
+        self.write_command(Instruction::GAMSET, &[0x02])?;
         if self.inverted {
             self.write_command(Instruction::INVON, &[])?;
         } else {
@@ -137,7 +138,13 @@ where
             self.write_command(Instruction::MADCTL, &[0x08])?;
         }
         self.write_command(Instruction::COLMOD, &[0x05])?;
+        self.write_command(Instruction::GMCTRP1, &[0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29,
+            0x2d, 0x29, 0x25, 0x2b, 0x39, 0x00, 0x01, 0x03, 0x10])?;
+        self.write_command(Instruction::GMCTRN1, &[0x03, 0x1d, 0x07, 0x06, 0x2e, 0x2c, 0x29,
+            0x2d, 0x2e, 0x2e, 0x37, 0x3f, 0x00, 0x00, 0x02, 0x10])?;
+        self.write_command(Instruction::NORON, &[])?;
         self.write_command(Instruction::DISPON, &[])?;
+        delay.delay_ms(100);
         self.set_orientation(self.orientation, self.width as u32, self.height as u32)?;
         delay.delay_ms(200);
         Ok(())
