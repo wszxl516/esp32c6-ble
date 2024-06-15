@@ -19,7 +19,7 @@ use st7735s::{Orientation, ST7735};
 use std::default::Default;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
-use crate::common::get_date;
+use crate::common::{get_date, MemInfo};
 slint::include_modules!();
 
 const DISPLAY_WIDTH: u32 = 160;
@@ -78,7 +78,7 @@ where
     let mut old_msg = String::with_capacity(256);
     let mut current_msg = String::with_capacity(256);
     let timer = slint::Timer::default();
-
+    let mut mem = MemInfo::new();
     timer.start(
         slint::TimerMode::Repeated,
         Duration::from_millis(10),
@@ -90,10 +90,12 @@ where
 
             let date = get_date();
             let temp = t.get().unwrap_or(0.0);
+            mem.fetch();
+            let (free, total) = mem.kb();
             let time_str = format!(
-                "{}\nTemp: {:.0}C",
+                "{}\nTemp: {:.0}C Mem: {:.01}%",
                 date.format("%d %b %a %H:%M:%S"),
-                temp
+                temp,  ((total - free) / total) * 100.0
             );
             strong.invoke_set_info_title(SharedString::from(time_str), 32);
 

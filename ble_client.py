@@ -55,22 +55,22 @@ async def uart_terminal(address):
             task.cancel()
         sys.exit(0)
 
-    def handle_rx(_: BleakGATTCharacteristic, receive_data: bytearray):
-        print("received:", receive_data.decode())
+    def handle_tx(_: BleakGATTCharacteristic, receive_data: bytearray):
+        print(receive_data.decode())
 
     try:
         async with BleakClient(device, disconnected_callback=on_disconnect) as client:
-            await client.start_notify(UART_TX_UUID, handle_rx)
+            await client.start_notify(UART_TX_UUID, handle_tx)
             print("Connected, start typing and press ENTER to send")
             loop = asyncio.get_running_loop()
             uart = client.services.get_service(UART_UUID)
             rx_char = uart.get_characteristic(UART_RX_UUID)
             while True:
-                data = await loop.run_in_executor(None, sys.stdin.buffer.readline)
-                if not data or data[-1] == b'\n' or data.__len__() > rx_char.max_write_without_response_size:
+                data = await loop.run_in_executor(None, input)
+                if not data or data.__len__() > rx_char.max_write_without_response_size:
                     break
-                await client.write_gatt_char(rx_char, bytearray(data[0:data.__len__() - 1]), response=False)
-                print("sent: ", data.decode())
+                await client.write_gatt_char(rx_char, bytearray(data[0:data.__len__()].encode()), response=False)
+
     except KeyboardInterrupt:
         sys.exit(0)
 

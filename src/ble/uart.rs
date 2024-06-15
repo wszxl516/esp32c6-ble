@@ -1,5 +1,5 @@
 use super::BleDevice;
-use crate::common::{DeviceID, get_date, MemInfo};
+use crate::common::{get_date, DeviceID, MemInfo};
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::NimbleProperties;
 use log::debug;
@@ -31,7 +31,7 @@ pub fn init_uart(device: &mut BleDevice, sender: Sender<String>) -> anyhow::Resu
         let data = Vec::from(args.recv_data());
         let msg = match std::str::from_utf8(&data) {
             Ok(cmd) => cmd_wrapper(cmd),
-            Err(_) => "unknown".to_string(),
+            Err(_) => HELP_INFO.to_string(),
         };
         tx.lock().set_value(msg.as_bytes());
         sender.send(msg).unwrap();
@@ -41,13 +41,15 @@ pub fn init_uart(device: &mut BleDevice, sender: Sender<String>) -> anyhow::Resu
     Ok(())
 }
 
+const HELP_INFO: &str = "cmd: date, free, mac";
+
 fn cmd_wrapper(cmd: &str) -> String {
     match cmd {
         "date" => {
             let date = get_date();
             format!("{}", date.format("%Y-%m-%d %H:%M:%S"))
         }
-        "mem" => {
+        "free" => {
             let mut mem = MemInfo::new();
             mem.fetch();
             format!("{:.2}kb/{:.2}kb", mem.kb().0, mem.kb().1)
@@ -55,6 +57,7 @@ fn cmd_wrapper(cmd: &str) -> String {
         "mac" => {
             format!("{}", DeviceID::get())
         }
-        _ => "unknown".to_string(),
+        "help" => HELP_INFO.to_string(),
+        _ => HELP_INFO.to_string(),
     }
 }
