@@ -1,4 +1,6 @@
 # ESP-IDF Partition Table
+#mkspiffs -b 4096 -p 256 -s 1048576 -c config part.bin
+#esptool --chip esp32c6 -p /dev/ttyACM0  write_flash 0x300000 part.bin
 # Name,   Type, SubType, Offset,  Size, Flags
 nvs,      data, nvs,     0x9000,  0x6000,
 phy_init, data, phy,     0xf000,  0x1000,

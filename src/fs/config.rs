@@ -1,9 +1,9 @@
+use std::io::Read;
 use lazy_static::lazy_static;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use crate::common::data::{Gradient};
-
-use crate::fs::DATA_PART;
+use crate::fs::spiffs::SPIFS;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -11,23 +11,15 @@ pub struct Config {
     pub date_fixed_offset: i32,
 }
 impl Config{
-    pub fn from_partition() -> Option<Config>{
-        let partition = *DATA_PART;
-        match partition {
-            None => {
+    pub fn from_file() -> Option<Config>{
+        SPIFS.check().ok()?;
+        let mut f = std::fs::File::open("/data/config.json").ok()?;
+        let mut buffer = String::with_capacity(512);
+        f.read_to_string(&mut buffer).ok()?;
+        match serde_json::from_str::<Config>(&buffer) {
+            Ok(config) =>Some(config),
+            Err(_) => {
                 None
-            },
-            Some(part) => {
-                let mut buffer = vec![0u8; 512];
-                part.read(0, &mut buffer).ok()?;
-                let (end_idx, _) = buffer.iter().enumerate().find(|(_i, v)|**v == 0xff)?;
-                let json_str = std::str::from_utf8(buffer.split_at(end_idx).0).ok()?;
-                match serde_json::from_str::<Config>(json_str) {
-                    Ok(config) =>Some(config),
-                    Err(_) => {
-                        None
-                    }
-                }
             }
         }
     }
@@ -35,7 +27,7 @@ impl Config{
 
 lazy_static!{
     pub static ref CONFIG: Option<Config> = {
-        let config = Config::from_partition();
+        let config = Config::from_file();
         debug!("CONFIG: {:?}", config);
         config
     };
