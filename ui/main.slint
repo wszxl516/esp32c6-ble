@@ -1,8 +1,9 @@
 import "./asset/monofonto.ttf";
+import { MagicText, MagicIcon, ProgressSlider } from "./vivi/ui/magic.slint";
 export global Theme {
     out property <brush> background: #000000;
     out property <brush> foreground: #ffffff;
-    out property <brush> img_colorize: #0000ff;
+    out property <brush> img_colorize: #4bf109;
     out property <length> small_spacing: 5px;
     out property <length> big_spacing: 10px;
 }
@@ -24,7 +25,7 @@ component Info {
             visible: root.visible;
             spacing: Theme.small_spacing;
             height: title_size * 1px;
-            logo := Image {
+            logo := MagicIcon {
                 height: title_size * 1px;
                 width: title_size * 1px;
                 source: root.logo;
@@ -32,7 +33,7 @@ component Info {
                 colorize: img_colorize;
             }
 
-            title := Text {
+            title := MagicText {
                 visible: root.visible;
                 text: root.title;
                 color: text_color;
@@ -44,7 +45,7 @@ component Info {
             }
         }
 
-        text := Text {
+        text := MagicText {
             visible: root.visible;
             text: root.text;
             color: text_color;
@@ -52,6 +53,12 @@ component Info {
             vertical-alignment: TextVerticalAlignment.top;
             horizontal-alignment: TextHorizontalAlignment.left;
             wrap: word-wrap;
+        }
+        ProgressSlider{
+            width: root.width;
+            height: 20px;
+            indeterminate: true;
+            interactive: true;
         }
     }
 }

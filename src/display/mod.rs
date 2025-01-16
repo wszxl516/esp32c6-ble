@@ -38,7 +38,7 @@ pub fn setup_display(
         .dma(Dma::Auto((DISPLAY_HEIGHT * DISPLAY_WIDTH) as usize))
         .intr_flags(Default::default());
     let spi_config = SpiConfig::new()
-        .baudrate(40.MHz().into())
+        .baudrate(80.MHz().into())
         .write_only(true)
         .data_mode(MODE_0)
         .queue_size(2)
@@ -81,7 +81,7 @@ where
     let mut mem = MemInfo::new();
     timer.start(
         slint::TimerMode::Repeated,
-        Duration::from_millis(10),
+        Duration::from_millis(200),
         move || {
             match receiver.try_recv() {
                 Ok(msg) => current_msg = msg,

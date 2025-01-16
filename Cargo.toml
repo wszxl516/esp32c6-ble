@@ -11,9 +11,13 @@ name = "esp32c6-ble"
 harness = false
 
 [profile.release]
-opt-level = "s"
+opt-level = "z"
 strip = true
-lto = true
+lto = "fat"
+panic="abort"
+debug-assertions = false
+overflow-checks = false
+codegen-units = 1
 
 [profile.dev]
 debug = true
@@ -21,7 +25,7 @@ opt-level = "z"
 
 [dependencies]
 log = { version = "0.4", default-features = false }
-esp-idf-svc = { version = "0.48", default-features = false , features = ["std", "alloc", "std", "experimental", "native"]}
+esp-idf-svc = { version = "0.48", default-features = false , features = ["std", "alloc", "experimental", "native"]}
 embedded-hal = "1.0.0"
 embedded-graphics-core = "0.4.0"
 embedded-graphics = { version = "0.8.1" , features = ["fixed"]}
@@ -31,7 +35,7 @@ smart-leds = "0.4.0"
 smart-leds-trait = { version = "0.3" }
 anyhow = "1.0.86"
 chrono = { version = "0.4.37", default-features = false, features = ["libc", "clock"] }
-slint = { version = "1.6.0", default-features = false, features = ["compat-1-2", "renderer-software", "unsafe-single-threaded", "libm"] }
+slint = { version = "1.9.2", default-features = false, features = ["compat-1-2", "renderer-software", "unsafe-single-threaded", "libm"] }
 serde = { version = "1.0.203", features = ["derive"] }
 lazy_static = "1.4.0"
 serde_json = "1.0.117"
@@ -39,4 +43,4 @@ serde_json = "1.0.117"
 [build-dependencies]
 embuild = "0.31.3"
 anyhow = "1.0.81"
-slint-build = "1.6.0"
+slint-build = "1.9.2"

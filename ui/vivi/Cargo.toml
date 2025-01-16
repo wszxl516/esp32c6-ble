@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2024 vivi developers <vivi-ui@tuta.io>
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "vivi_ui"
+version = "0.2.0"
+edition = "2021"
+authors = ["vivi developers <vivi-ui@tuta.io>"]
+license = "MIT"
+keywords = ["ui", "gui", "slint"]
+categories = ["gui"]
+description = "Custom component library for Slint"
+repository = "https://app.radicle.xyz/nodes/seed.radicle.garden/rad:z3oxAZSLcyXgpa7fcvgtueF49jHpH"
+readme = "README.md"

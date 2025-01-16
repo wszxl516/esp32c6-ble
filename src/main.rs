@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
             .unwrap();
             loop {
                 led_state.start().unwrap_or(());
-                sleep(Duration::from_millis(10))
+                sleep(Duration::from_millis(100))
             }
         })
         .unwrap();

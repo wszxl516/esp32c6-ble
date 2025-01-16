@@ -47,16 +47,16 @@ impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> slint::platform::Platform
         self.window.borrow().as_ref().unwrap().set_size(size);
 
         loop {
+            std::thread::sleep(Duration::from_millis(10));
             slint::platform::update_timers_and_animations();
             if let Some(window) = self.window.borrow().clone() {
-                if window.has_active_animations() {
-                    continue;
-                }
                 window.draw_if_needed(|renderer| {
                     renderer.render_by_line(self);
                 });
+                if window.has_active_animations() {
+                    continue;
+                }
             }
-            std::thread::sleep(Duration::from_millis(10));
         }
     }
 
@@ -92,7 +92,7 @@ impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> LineBufferProvider for &E
                 ),
                 buffer
                     .iter()
-                    .map(|p| Rgb565::from(Rgb565::from(RawU16::new(p.0))).into()),
+                    .map(|p| Rgb565::from(RawU16::new(p.0))),
             )
             .map_err(drop)
             .unwrap();
