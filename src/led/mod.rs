@@ -90,11 +90,11 @@ impl LedState<'_> {
         }
     }
     pub fn start(&mut self) -> anyhow::Result<()> {
-        let state = match self.receiver.try_recv() {
-            Ok(state) => state,
-            Err(_) => self.state,
+        match self.receiver.try_recv() {
+            Ok(state) => {self.state = state},
+            Err(_) => {}
         };
-        self.run(state);
+        self.run(self.state);
         Ok(())
     }
 }

@@ -38,7 +38,7 @@ pub fn setup_display(
         .dma(Dma::Auto((DISPLAY_HEIGHT * DISPLAY_WIDTH) as usize))
         .intr_flags(Default::default());
     let spi_config = SpiConfig::new()
-        .baudrate(80.MHz().into())
+        .baudrate(40.MHz().into())
         .write_only(true)
         .data_mode(MODE_0)
         .queue_size(2)
