@@ -81,7 +81,7 @@ where
     let mut mem = MemInfo::new();
     timer.start(
         slint::TimerMode::Repeated,
-        Duration::from_millis(200),
+        Duration::from_millis(50),
         move || {
             match receiver.try_recv() {
                 Ok(msg) => current_msg = msg,
@@ -98,7 +98,7 @@ where
                 temp,  ((total - free) / total) * 100.0
             );
             strong.invoke_set_info_title(SharedString::from(time_str), 32);
-
+            strong.invoke_animation();
             if current_msg != old_msg {
                 strong.invoke_set_info_text(
                     SharedString::from(current_msg.clone()),

@@ -1,11 +1,41 @@
 import "./asset/monofonto.ttf";
 import { MagicText, MagicIcon, ProgressSlider } from "./vivi/ui/magic.slint";
+import { MagicVerticalBox } from "vivi/ui/magic/magic_vertical_box.slint";
 export global Theme {
     out property <brush> background: #000000;
     out property <brush> foreground: #ffffff;
-    out property <brush> img_colorize: #4bf109;
+    out property <brush> img_colorize: #ffffff;
     out property <length> small_spacing: 5px;
     out property <length> big_spacing: 10px;
+    out property <[image]> animation: [
+        @image-url("asset/animation/0.png"),
+        @image-url("asset/animation/1.png"),
+        @image-url("asset/animation/2.png"),
+        @image-url("asset/animation/3.png"),
+        @image-url("asset/animation/4.png"),
+        @image-url("asset/animation/5.png"),
+        @image-url("asset/animation/6.png"),
+        @image-url("asset/animation/7.png"),
+        @image-url("asset/animation/8.png"),
+        @image-url("asset/animation/9.png"),
+        @image-url("asset/animation/10.png"),
+        @image-url("asset/animation/11.png"),
+        @image-url("asset/animation/12.png"),
+        @image-url("asset/animation/13.png")
+    ];
+}
+
+component Animation inherits MagicIcon{
+    in-out property <[image]> animation;
+    in-out property <int> index: 0;
+    image-fit: ImageFit.fill;
+    public function update() {
+        self.source = root.animation[index];
+        index += 1;
+        if index == root.animation.length {
+            index = 0
+        }
+    }
 }
 
 component Info {
@@ -15,8 +45,10 @@ component Info {
     in property <string> title: "";
     in property <color> text_color: Theme.foreground;
     in property <int> text_size: 16;
-    in property <int> title_size: 22;
-
+    in property <int> title_size: 32;
+    public function update() {
+        animation.update()
+    }
     VerticalLayout {
         width: root.width;
         height: root.height;
@@ -25,12 +57,25 @@ component Info {
             visible: root.visible;
             spacing: Theme.small_spacing;
             height: title_size * 1px;
-            logo := MagicIcon {
+            animation := Animation {
                 height: title_size * 1px;
                 width: title_size * 1px;
-                source: root.logo;
-                image-fit: ImageFit.fill;
-                colorize: img_colorize;
+                animation: [
+                    @image-url("asset/animation/0.png"),
+                    @image-url("asset/animation/1.png"),
+                    @image-url("asset/animation/2.png"),
+                    @image-url("asset/animation/3.png"),
+                    @image-url("asset/animation/4.png"),
+                    @image-url("asset/animation/5.png"),
+                    @image-url("asset/animation/6.png"),
+                    @image-url("asset/animation/7.png"),
+                    @image-url("asset/animation/8.png"),
+                    @image-url("asset/animation/9.png"),
+                    @image-url("asset/animation/10.png"),
+                    @image-url("asset/animation/11.png"),
+                    @image-url("asset/animation/12.png"),
+                    @image-url("asset/animation/13.png")
+                ];
             }
 
             title := MagicText {
@@ -54,7 +99,8 @@ component Info {
             horizontal-alignment: TextHorizontalAlignment.left;
             wrap: word-wrap;
         }
-        ProgressSlider{
+
+        ProgressSlider {
             width: root.width;
             height: 20px;
             indeterminate: true;
@@ -64,6 +110,8 @@ component Info {
 }
 
 export component MainWindow inherits Window {
+    width: 160px;
+    height: 128px;
     background: Theme.background;
     padding: Theme.small_spacing;
     default-font-family: "Monofonto";
@@ -76,10 +124,12 @@ export component MainWindow inherits Window {
         info.title = title;
         info.title_size = size;
     }
+    public function animation() {
+        info.update()
+    }
     info := Info {
         width: parent.width;
         height: parent.height;
         visible: true;
-        logo: @image-url("asset/info.svg");
     }
 }
