@@ -10,28 +10,31 @@ use embedded_graphics_core::primitives::Rectangle;
 use slint::platform::software_renderer::{LineBufferProvider, Rgb565Pixel};
 
 use crate::display::DISPLAY_WIDTH;
-
+pub trait DISPLAY: DrawTarget<Color = Rgb565> + OriginDimensions {}
+impl<T: DrawTarget<Color = Rgb565> + OriginDimensions> DISPLAY for T {}
 #[derive(Clone)]
-pub struct EspBackend<D: DrawTarget<Color = Rgb565> + OriginDimensions> {
+pub struct EspBackend<D: DISPLAY> {
     window: RefCell<Option<Rc<slint::platform::software_renderer::MinimalSoftwareWindow>>>,
     display: RefCell<D>,
-    buffer: RefCell<[Rgb565Pixel; DISPLAY_WIDTH as usize]>,
     size: Size,
 }
 
-impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> EspBackend<D> {
+impl<D: DISPLAY> EspBackend<D> {
     pub fn new(display: D) -> Self {
         let size = display.size();
         Self {
             window: RefCell::new(None),
             display: RefCell::new(display),
-            buffer: RefCell::new([Rgb565Pixel(0); DISPLAY_WIDTH as usize]),
             size,
         }
     }
 }
+struct DrawBuffer<'a, D: DISPLAY> {
+    display: &'a mut D,
+    buffer: &'a mut [Rgb565Pixel],
+}
 
-impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> slint::platform::Platform for EspBackend<D> {
+impl<D: DISPLAY> slint::platform::Platform for EspBackend<D> {
     fn create_window_adapter(
         &self,
     ) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
@@ -44,18 +47,21 @@ impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> slint::platform::Platform
 
     fn run_event_loop(&self) -> anyhow::Result<(), slint::PlatformError> {
         let size = slint::PhysicalSize::new(self.size.width, self.size.height);
-        self.window.borrow().as_ref().unwrap().set_size(size);
-
+        let window = self.window.borrow().clone().unwrap();
+        window.set_size(size);
+        let mut buf = [Rgb565Pixel(0); DISPLAY_WIDTH as usize];
+        let mut buffer = DrawBuffer {
+            display: &mut *self.display.borrow_mut(),
+            buffer: &mut buf,
+        };
         loop {
             std::thread::sleep(Duration::from_millis(10));
             slint::platform::update_timers_and_animations();
-            if let Some(window) = self.window.borrow().clone() {
-                window.draw_if_needed(|renderer| {
-                    renderer.render_by_line(self);
-                });
-                if window.has_active_animations() {
-                    continue;
-                }
+            window.draw_if_needed(|renderer| {
+                renderer.render_by_line(&mut buffer);
+            });
+            if window.has_active_animations() {
+                continue;
             }
         }
     }
@@ -71,28 +77,24 @@ impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> slint::platform::Platform
     }
 }
 
-impl<D: DrawTarget<Color = Rgb565> + OriginDimensions> LineBufferProvider for &EspBackend<D> {
+impl<'a, D: DISPLAY> LineBufferProvider for &mut DrawBuffer<'a, D> {
     type TargetPixel = Rgb565Pixel;
 
     fn process_line(
         &mut self,
         line: usize,
         range: core::ops::Range<usize>,
-        render_fn: impl FnOnce(&mut [Rgb565Pixel]),
+        render_fn: impl FnOnce(&mut [Self::TargetPixel]),
     ) {
-        let mut buffer = self.buffer.borrow_mut();
-        let buffer = &mut buffer[range.clone()];
+        let buffer = &mut self.buffer[range.clone()];
         render_fn(buffer);
         self.display
-            .borrow_mut()
             .fill_contiguous(
                 &Rectangle::new(
                     Point::new(range.start as _, line as _),
                     Size::new(range.len() as _, 1),
                 ),
-                buffer
-                    .iter()
-                    .map(|p| Rgb565::from(RawU16::new(p.0))),
+                buffer.iter().map(|p| Rgb565::from(RawU16::new(p.0))),
             )
             .map_err(drop)
             .unwrap();
